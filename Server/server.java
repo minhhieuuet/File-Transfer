@@ -13,7 +13,7 @@ public class server {
 			int countClient = 0;
 
 			ServerSocket serverSocket = new ServerSocket(_port);
-			System.out.print("\nServer is listening at port 8888.");
+			System.out.print("\nServer is listening at port"+_port);
 			while (true) {
 				Socket socket = serverSocket.accept();
 
@@ -54,8 +54,7 @@ class RequestHandler extends Thread {
 
 	private static DataOutputStream dos;
 
-	public RequestHandler(Socket _socket, int _flag, int _countClient,DataInputStream _dis, DataOutputStream _dos) {			this.socket = _socket;
-		this.flag = _flag;
+	public RequestHandler(Socket _socket, int _flag, int _countClient,DataInputStream _dis, DataOutputStream _dos) {
 		this.dis = _dis;
 		this.dos = _dos;
 		this.socket = _socket;
@@ -77,7 +76,7 @@ class RequestHandler extends Thread {
 			dos.writeInt(flag);
 			dos.flush();
 			System.out.println("\nAll client:"+countClient);
-			if(countClient == 2) {
+			if(countClient > 0) {
 
 				// enter file until file is exists
 				while(true) {
