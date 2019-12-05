@@ -16,28 +16,24 @@ public class client {
 	        System.out.print("Server's IP Address: ");
 	        serverIpAddr = input.nextLine();
 	        InetAddress serverAddr = InetAddress.getByName(serverIpAddr);
-
-
-	    	Socket socket = new Socket(serverAddr,_port);
-
-
+	        //create socket connect
+			Socket socket = new Socket(serverAddr,_port);
 			DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-
 			DataInputStream dis = new DataInputStream(socket.getInputStream());
-
 			System.out.print("\nConnect succesfull!");
-			
+			// receive flag
 			int flag = dis.readInt();
 			System.out.println("\nMy flag: "+flag);
-
+			// receive file name
 			String fileName = dis.readUTF();
-
 			System.out.println("\nFile'name will receive: "+fileName);
-
+			// if receive flag == 1, client start working
 			if(flag==1){
+				// receive file size
 				long fileSize = dis.readLong();
 				System.out.println("We will receive " +fileName+ " direct");
 				System.out.println("\nSize of file: " +fileSize+ " bytes");
+				// receive file
 				FileOutputStream fileOutput = new FileOutputStream(fileName);
 				byte[] buff = new byte[1024];
 				long size = 0;
@@ -53,33 +49,30 @@ public class client {
 				// Listen port 4444.
 				ServerSocket serverSocket = new ServerSocket(_portClient);
 				System.out.print("\nClient is listening at port "+_portClient);
-
+				// send comfirm: open port to listen other client
 				dos.writeInt(flag);
 				dos.flush();
-
+				// connect other client
 	        	while(true) {
 	        		Socket conClient = serverSocket.accept();
 	        		Thread multiClient = new MultiClient(conClient, fileName);
 	        		multiClient.start();
 	        	}
-
+	        // client receive from other client
 			} else {
 				System.out.println("\nWe will receive from other client.");
-
-				// Connect to client at port 4444
+				// receive ip address
 				clientAddr = dis.readUTF();
-
 				System.out.println("\nWe will connect to clinet: "+clientAddr);
-
+				// connect to client
 				Socket socketClient = new Socket(clientAddr,_portClient);
 				System.out.println("\nConnect to client succesfull");
-
 				DataOutputStream outThr = new DataOutputStream(socketClient.getOutputStream());
         		DataInputStream inThr = new DataInputStream(socketClient.getInputStream());
-
+        		// receive file size
         		long fileSizeReceive = inThr.readLong();
-
         		System.out.println("\nSize of file: " +fileSizeReceive+ " bytes");
+        		// receive file
 				FileOutputStream fiOutput = new FileOutputStream(fileName);
 				byte[] buffReceive = new byte[1024];
 				long sizeReceive = 0;
@@ -99,7 +92,7 @@ public class client {
 		} catch(Exception e) {
 		    e.printStackTrace();
 		}
-		finally{
+		finally {
 			//socket.close();
 		}
 
@@ -109,7 +102,6 @@ public class client {
 class MultiClient extends Thread {
 	private Socket socketThread;
 	String fileNameSent;
-
 
 	public MultiClient (Socket _socket, String _fileNameSent) {
 		this.socketThread = _socket;
@@ -123,18 +115,16 @@ class MultiClient extends Thread {
 		try {
 			out = new DataOutputStream(socketThread.getOutputStream());
 			in = new DataInputStream(socketThread.getInputStream());
-
+			
 			File fileSent = new File(fileNameSent);
-
 			long fileSizeSent = fileSent.length();
+			//send file size
 			out.writeLong(fileSizeSent);
 			out.flush();
-
 			System.out.println("\nFile size will sent: "+fileSizeSent);
-
+			// send file
 			FileInputStream fInput =  new FileInputStream(fileSent);
 			byte[] buffs = new byte[1024];
-
 			int counter;
 			while ((counter = fInput.read(buffs)) != -1) {
 				out.write(buffs, 0, counter);
