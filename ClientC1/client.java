@@ -32,6 +32,8 @@ public class client {
 
 			String fileName = dis.readUTF();
 
+			System.out.println("\nFile'name will receive: "+fileName);
+
 			if(flag==1){
 				long fileSize = dis.readLong();
 				System.out.println("We will receive " +fileName+ " direct");
@@ -50,7 +52,10 @@ public class client {
 
 				// Listen port 4444.
 				ServerSocket serverSocket = new ServerSocket(_portClient);
-				System.out.print("\nClient is listening at port 8888.");
+				System.out.print("\nClient is listening at port "+_portClient);
+
+				dos.writeInt(flag);
+				dos.flush();
 
 	        	while(true) {
 	        		Socket conClient = serverSocket.accept();
@@ -62,29 +67,32 @@ public class client {
 				System.out.println("\nWe will receive from other client.");
 
 				// Connect to client at port 4444
+				clientAddr = dis.readUTF();
+
+				System.out.println("\nWe will connect to clinet: "+clientAddr);
 
 				Socket socketClient = new Socket(clientAddr,_portClient);
 				System.out.println("\nConnect to client succesfull");
 
-				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-        		DataInputStream in = new DataInputStream(socket.getInputStream());
+				DataOutputStream outThr = new DataOutputStream(socketClient.getOutputStream());
+        		DataInputStream inThr = new DataInputStream(socketClient.getInputStream());
 
-        		long fileSizeReceive = in.readLong();
+        		long fileSizeReceive = inThr.readLong();
 
         		System.out.println("\nSize of file: " +fileSizeReceive+ " bytes");
-				FileOutputStream fOutput = new FileOutputStream(fileName);
-				byte[] buffs = new byte[1024];
+				FileOutputStream fiOutput = new FileOutputStream(fileName);
+				byte[] buffReceive = new byte[1024];
 				long sizeReceive = 0;
 				while (sizeReceive < fileSizeReceive) {
-					int counter;
-					counter = in.read(buffs);
-					fOutput.write(buffs, 0, counter);
-					sizeReceive += counter;
+					int counterReceive;
+					counterReceive = inThr.read(buffReceive);
+					fiOutput.write(buffReceive, 0, counterReceive);
+					sizeReceive += counterReceive;
 				}
 				System.out.println("Received file successfully!");
-				fOutput.close();
-				in.close();
-				out.close();
+				fiOutput.close();
+				inThr.close();
+				outThr.close();
 				socketClient.close();
 
 			}
@@ -122,6 +130,8 @@ class MultiClient extends Thread {
 			out.writeLong(fileSizeSent);
 			out.flush();
 
+			System.out.println("\nFile size will sent: "+fileSizeSent);
+
 			FileInputStream fInput =  new FileInputStream(fileSent);
 			byte[] buffs = new byte[1024];
 
@@ -132,10 +142,7 @@ class MultiClient extends Thread {
 			}
 			fInput.close();
 			System.out.println("\nSent file successfully!");
-
-		//	out.close();
-		//	in.close();
-		//	socketThread.close();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
