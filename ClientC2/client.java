@@ -1,6 +1,6 @@
 import java.net.*;
 import java.io.*;
-import java.util.Scanner;  
+import java.util.Scanner;
 
 public class client {
 
@@ -10,26 +10,27 @@ public class client {
 	private static String clientAddr;
 
 	public static void main(String[] args){
+		
 		try {
-	        Scanner input = new Scanner(System.in);	
-	        System.out.print("\nServer's IP Address: ");
+	        Scanner input = new Scanner(System.in);
+	        System.out.print("Server's IP Address: ");
 	        serverIpAddr = input.nextLine();
 	        InetAddress serverAddr = InetAddress.getByName(serverIpAddr);
-	
+
+
 	    	Socket socket = new Socket(serverAddr,_port);
-        
-       
-	       	DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-        
-	       	DataInputStream dis = new DataInputStream(socket.getInputStream());
-		
+
+
+			DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+
+			DataInputStream dis = new DataInputStream(socket.getInputStream());
+
 			System.out.print("\nConnect succesfull!");
-
-			int flag = dis.readInt();
-
-			System.out.println("\nMy flag: "+flag);
-
+			
 			String fileName = dis.readUTF();
+			System.out.println("\nFilename:" + fileName);			
+			int flag = dis.readInt();
+			System.out.println("\nMy flag: "+flag);
 
 			if(flag==1){
 				long fileSize = dis.readLong();
@@ -45,30 +46,32 @@ public class client {
 					size += count;
 				}
 				System.out.println("Received file successfully!");
-				fileOutput.close();		
+				fileOutput.close();
 
 				// Listen port 4444.
 				ServerSocket serverSocket = new ServerSocket(_portClient);
-				System.out.print("\nClient is listening at port 8888.");
+				System.out.print("\nClient is listening at port 4444.");
 
-	        	while(true) {
-	        		Socket conClient = serverSocket.accept(); 
-	        		Thread multiClient = new MultiClient(conClient, fileName);
-	        		multiClient.start();
-	        	}
+				while(true) {
+					Socket conClient = serverSocket.accept();
+					Thread multiClient = new MultiClient(conClient, fileName);
+					multiClient.start();
+				}
 
 			} else {
 				System.out.println("\nWe will receive from other client.");
 
 				// Connect to client at port 4444
-
-				Socket socketClient = new Socket(clientAddr,_portClient);
+				clientAddr = dis.readUTF();
+				System.out.println("Ip client:" + clientAddr);
+				InetAddress clientIpAddr = InetAddress.getByName(clientAddr);
+				Socket socketClient = new Socket(clientIpAddr, _portClient);
 				System.out.println("\nConnect to client succesfull");
 
-				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-        		DataInputStream in = new DataInputStream(socket.getInputStream());
+				DataOutputStream out = new DataOutputStream(socketClient.getOutputStream());
+        			DataInputStream in = new DataInputStream(socketClient.getInputStream());
 
-        		long fileSizeReceive = in.readLong();
+        			long fileSizeReceive = in.readLong();
 
         		System.out.println("\nSize of file: " +fileSizeReceive+ " bytes");
 				FileOutputStream fOutput = new FileOutputStream(fileName);
@@ -78,18 +81,19 @@ public class client {
 					int counter;
 					counter = in.read(buffs);
 					fOutput.write(buffs, 0, counter);
-					sizeReceive += counter;	
+					sizeReceive += counter;
 				}
 				System.out.println("Received file successfully!");
 				fOutput.close();
 				in.close();
 				out.close();
 				socketClient.close();
-
 			}
-
 		} catch(Exception e) {
 		    e.printStackTrace();
+		}
+		finally{
+			//socket.close();
 		}
 
 	}

@@ -12,7 +12,7 @@ public class server {
 
 			int _port = 8888;
 			ServerSocket serverSocket = new ServerSocket(_port);
-			System.out.print("\nServer is listening at port"+_port);
+			System.out.println("\nServer is listening at port " + _port);
 			while (true) {
 				Socket socket = serverSocket.accept();
 
@@ -21,6 +21,7 @@ public class server {
 				//DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
 
 				InetAddress clientIp = socket.getInetAddress();
+				//System.out.println(clientIp.toString());
 				int clientPort = socket.getPort();
 
 				// only the first client connect have flag = 1
@@ -29,10 +30,10 @@ public class server {
 				RequestHandler requestHandler = new RequestHandler(socket, countClient);
 				System.out.println("\nClient address: " + clientIp.toString().substring(1) + ":" + clientPort + " is connecting");
 				vectorThread.add(requestHandler);
-				vectorAddr.add(clientIp.toString());
+				vectorAddr.add(clientIp.toString().substring(1));
 				requestHandler.start();
 
-				if(countClient == 3){
+				if(countClient == 2){
 					countClient = 0;
 				}
 
@@ -82,7 +83,7 @@ class RequestHandler extends Thread {
 
  			dos = new DataOutputStream( socket.getOutputStream());
 
-			if(countClient == 3) {
+			if(countClient == 2) {
 
 				// enter file until file is exists
 				while(true) {
@@ -97,27 +98,62 @@ class RequestHandler extends Thread {
 						System.out.print("\nFile is not found!");
 					}
 				}
-				RequestHandler client1 = server.vectorThread.get(0);
-				client1.dos.writeUTF(fileName);
-				client1.dos.flush();
+			
+				for(int i = 0; i < server.vectorThread.size(); i++){
+					server.vectorThread.get(i).dos.writeUTF(fileName);
+					if(i == 0){
+						server.vectorThread.get(i).dos.writeInt(1);
+						RequestHandler first_client = server.vectorThread.get(0);
+						//first_client.dos.writeUTF(fileName);
+						
+						first_client.dos.flush();
+
+						System.out.println("\nSend direct!");
+						long fileSize = file.length();
+						first_client.dos.writeLong(fileSize);
+						first_client.dos.flush();
+
+						FileInputStream fileInput =  new FileInputStream(file);
+						byte[] buff = new byte[buffer];
+
+						int count;
+						while ((count = fileInput.read(buff)) != -1) {
+							first_client.dos.write(buff, 0, count);
+						}
+						first_client.dos.flush();
+						fileInput.close();
+						System.out.println("\nSent file successfully!");
+					}
+					else{
+						server.vectorThread.get(i).dos.writeInt(0);
+						//server.vectorThread.get(i).dos.writeUTF(server.vectorAddr.get(0));
+					}
+				}
+				/*RequestHandler first_client = server.vectorThread.get(0);
+				//first_client.dos.writeUTF(fileName);
+				
+				first_client.dos.flush();
 
 				System.out.println("\nSend direct!");
 				long fileSize = file.length();
-				client1.dos.writeLong(fileSize);
-				client1.dos.flush();
+				first_client.dos.writeLong(fileSize);
+				first_client.dos.flush();
 
 				FileInputStream fileInput =  new FileInputStream(file);
 				byte[] buff = new byte[buffer];
 
 				int count;
 				while ((count = fileInput.read(buff)) != -1) {
-					client1.dos.write(buff, 0, count);
+					first_client.dos.write(buff, 0, count);
 				}
-				client1.os.flush();
+				first_client.dos.flush();
 				fileInput.close();
-				System.out.println("\nSent file successfully!");
-
-
+				System.out.println("\nSent file successfully!");*/
+				
+				server.vectorThread.get(1).dos.writeUTF(server.vectorAddr.get(0));
+				//server.vectorThread.get(1).dos.writeUTF(server.vectorAddr.get(0));*/
+				server.vectorThread.clear();	
+				server.vectorAddr.clear();
 				//} else {
 				//	 do somethings
 				//	System.out.println("\nDon't send direct!");

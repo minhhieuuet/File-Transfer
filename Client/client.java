@@ -27,12 +27,18 @@ public class client {
 
 			System.out.print("\nConnect succesfull!");
 			
+			String fileName = dis.readUTF();
+			
+			System.out.println("\nFilename:" + fileName);			
+			
 			int flag = dis.readInt();
 			System.out.println("\nMy flag: "+flag);
 
-			String fileName = dis.readUTF();
-
 			if(flag==1){
+				// Listen port 4444.
+				ServerSocket serverSocket = new ServerSocket(_portClient);
+				System.out.println("\nClient is listening at port "+_portClient);
+
 				long fileSize = dis.readLong();
 				System.out.println("We will receive " +fileName+ " direct");
 				System.out.println("\nSize of file: " +fileSize+ " bytes");
@@ -49,21 +55,24 @@ public class client {
 				fileOutput.close();
 
 				// Listen port 4444.
-				ServerSocket serverSocket = new ServerSocket(_portClient);
-				System.out.print("\nClient is listening at port 8888.");
-
-	        	while(true) {
-	        		Socket conClient = serverSocket.accept();
-	        		Thread multiClient = new MultiClient(conClient, fileName);
-	        		multiClient.start();
-	        	}
+				/*ServerSocket serverSocket = new ServerSocket(_portClient);
+				System.out.print("\nClient is listening at port "+_portClient);*/
+				
+				System.out.println("Send file to other clients.");
+				while(true) {
+					Socket conClient = serverSocket.accept();
+					Thread multiClient = new MultiClient(conClient, fileName);
+					multiClient.start();
+				}
 
 			} else {
 				System.out.println("\nWe will receive from other client.");
 
 				// Connect to client at port 4444
-
-				Socket socketClient = new Socket(clientAddr,_portClient);
+				clientAddr = dis.readUTF();
+				System.out.println("Ip client:" + clientAddr);
+				InetAddress clientIpAddr = InetAddress.getByName(clientAddr);
+				Socket socketClient = new Socket(clientIpAddr, _portClient);
 				System.out.println("\nConnect to client succesfull");
 
 				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -121,7 +130,7 @@ class MultiClient extends Thread {
 			long fileSizeSent = fileSent.length();
 			out.writeLong(fileSizeSent);
 			out.flush();
-
+			System.out.println("File Size send to other clients:" + fileSizeSent);
 			FileInputStream fInput =  new FileInputStream(fileSent);
 			byte[] buffs = new byte[1024];
 
