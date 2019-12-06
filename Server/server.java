@@ -16,8 +16,10 @@ public class server {
 				Socket socket = serverSocket.accept();
 				InetAddress clientIp = socket.getInetAddress();
 				int clientPort = socket.getPort();
+				DataInputStream dis = new DataInputStream(socket.getInputStream());
+				DataOutputStream dos = new DataOutputStream(socket.getOutputStream()); 
 				countClient++;
-				RequestHandler requestHandler = new RequestHandler(socket, countClient);
+				RequestHandler requestHandler = new RequestHandler(socket, countClient, dis, dos);
 				System.out.println("\nClient address: " + clientIp.toString().substring(1) + ":" + clientPort + " is connecting");
 				vectorThread.add(requestHandler);
 				vectorAddr.add(clientIp.toString());
@@ -46,13 +48,14 @@ class RequestHandler extends Thread {
 	private int buffer = 1024;
 
 
-	public RequestHandler(Socket _socket, int _countClient){
+	public RequestHandler(Socket _socket, int _countClient, DataInputStream _dis, DataOutputStream _dos){
 		this.socket = _socket;
 		this.countClient = _countClient;
+		this.dis = _dis;
+		this.dos = _dos;
 	}
 
 	public void run() {
-	//	while(true) {
 			try {
 
 				Scanner input = new Scanner(System.in);
@@ -60,10 +63,8 @@ class RequestHandler extends Thread {
 				File file;
 
 				System.out.println("\nAll client:"+countClient);
-
-				dis =  new DataInputStream(socket.getInputStream());
-				dos = new DataOutputStream( socket.getOutputStream());
-
+			//	dis =  new DataInputStream(socket.getInputStream());
+			//	dos = new DataOutputStream( socket.getOutputStream());
 				if(countClient == 3) {
 					// flag1: client receive direct, flag2: client receive from other client.
 					int flag1 = 1;
@@ -82,62 +83,74 @@ class RequestHandler extends Thread {
 					client3.dos.writeInt(flag2);
 					client3.dos.flush();
 					System.out.println("Sent flag to all client!");
-
-					// enter file until file is exists
+					// Can send many file
 					while(true) {
-						System.out.print("\nEnter file's name to send to client: ");
-						fileName = input.nextLine();
-						file = new File(fileName);
+						// enter file until file is exists
+						while(true) {
+							System.out.print("\nEnter file's name to send to client: ");
+							fileName = input.nextLine();
+							file = new File(fileName);
 
-						if(file.exists()){
+							if(file.exists() || fileName.equals("@exit")){
+								break;
+							}
+							else {
+								System.out.print("\nFile is not found!");
+							}
+						}
+
+						if(fileName.equals("@exit"))
+						{
 							break;
+						} else {
+							// send file's name to all client
+							client1.dos.writeUTF(fileName);
+							client1.dos.flush();
+
+							client2.dos.writeUTF(fileName);
+							client2.dos.flush();
+
+							client3.dos.writeUTF(fileName);
+							client3.dos.flush();
+							System.out.println("\nsent file's name to all client.");
+							System.out.println("\nStart sending file directly!");
+							//send file size
+							long fileSize = file.length();
+							client1.dos.writeLong(fileSize);
+							client1.dos.flush();
+							//send file
+							FileInputStream fileInput =  new FileInputStream(file);
+							byte[] buff = new byte[buffer];
+							int count;
+							while ((count = fileInput.read(buff)) != -1) {
+								client1.dos.write(buff, 0, count);
+							}
+							client1.dos.flush();
+							fileInput.close();
+							// receive comfirm from client 1
+							int comfirm = client1.dis.readInt();
+							System.out.println("\nflag confirm: "+comfirm);
+							System.out.println("\nSent file successfully!");	
+							// after comfirm, send ip address of client to other client.
+							if(comfirm==1) {
+								String addClient = server.vectorAddr.get(0);
+								addClient = addClient.toString().substring(1);
+								System.out.println("\naddress sent to client: "+addClient);
+								client2.dos.writeUTF(addClient);
+								client2.dos.flush();
+								System.out.println("\nSent ip successfull.");
+
+								client3.dos.writeUTF(addClient);
+								client3.dos.flush();
+								System.out.println("\nSent ip successfull.");
+							}
 						}
-						else {
-							System.out.print("\nFile is not found!");
-						}
 					}
-					// send file's name to all client
-					client1.dos.writeUTF(fileName);
-					client1.dos.flush();
-
-					client2.dos.writeUTF(fileName);
-					client2.dos.flush();
-
-					client3.dos.writeUTF(fileName);
-					client3.dos.flush();
-					System.out.println("\nsent file's name to all client.");
-					System.out.println("\nStart sending file directly!");
-					//send file size
-					long fileSize = file.length();
-					client1.dos.writeLong(fileSize);
-					client1.dos.flush();
-					//send file
-					FileInputStream fileInput =  new FileInputStream(file);
-					byte[] buff = new byte[buffer];
-					int count;
-					while ((count = fileInput.read(buff)) != -1) {
-						client1.dos.write(buff, 0, count);
-					}
-					client1.dos.flush();
-					fileInput.close();
-					// receive comfirm from client 1
-					int comfirm = client1.dis.readInt();
-					System.out.println("\nflag confirm: "+comfirm);
-					System.out.println("\nSent file successfully!");	
-					// after comfirm, send ip address of client to other client.
-					if(comfirm==1) {
-						String addClient = server.vectorAddr.get(0);
-						addClient = addClient.toString().substring(1);
-						System.out.println("\naddress sent to client: "+addClient);
-						client2.dos.writeUTF(addClient);
-						client2.dos.flush();
-						System.out.println("\nSent ip successfull.");
-
-						client3.dos.writeUTF(addClient);
-						client3.dos.flush();
-						System.out.println("\nSent ip successfull.");
-					}
+					dis.close();
+					dos.close();
+					socket.close();
 				}
+
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

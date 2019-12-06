@@ -5,7 +5,7 @@ JC = javac
 	$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-	ClientC3/client.java \
+	ClientC1/client.java \
 	ClientC2/client.java \
 	ClientC3/client.java \
 	Server/server.java
