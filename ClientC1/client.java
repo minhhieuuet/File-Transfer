@@ -20,7 +20,7 @@ public class client {
 			Socket socket = new Socket(serverAddr,_port);
 			DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
 			DataInputStream dis = new DataInputStream(socket.getInputStream());
-			System.out.print("\nConnect succesfull!");
+			System.out.println("\nConnect succesfull!");
 			// receive flag
 			int flag = dis.readInt();
 			System.out.println("\nMy flag: "+flag);
@@ -28,13 +28,14 @@ public class client {
 			while(true) {
 				// receive file name
 				String fileName = dis.readUTF();
-				System.out.println("\nFile'name will receive: "+fileName);
 			
 				if(fileName.equals("@exit")){
-						break;
+					System.out.println("Server completely sent the file!");
+					break;
 				} else {
 					// if receive flag == 1, client start working
 					if(flag==1){
+						System.out.println("\nFile'name will receive: "+fileName);
 						// receive file size
 						long fileSize = dis.readLong();
 						System.out.println("We will receive " +fileName+ " direct");
@@ -71,9 +72,10 @@ public class client {
 	       			 			break;
 	      			  		}
 	      			  	}
-	        		serverSocket.close();
+	        			serverSocket.close();
 	   			     // client receive from other client
 					} else {
+						System.out.println("\nFile'name will receive: "+fileName);
 						System.out.println("\nWe will receive from other client.");
 						// receive ip address
 						clientAddr = dis.readUTF();
@@ -107,12 +109,13 @@ public class client {
 						outThr.close();
 						socketClient.close();
 
+					}
+				}
 			}
-		}
-		}
-		dis.close();
-		dos.close();
-		socket.close();
+			System.out.println("Close connect!");
+			dis.close();
+			dos.close();
+			socket.close();
 		} catch(Exception e) {
 		    e.printStackTrace();
 		}

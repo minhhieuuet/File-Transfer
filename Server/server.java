@@ -11,7 +11,7 @@ public class server {
 			int countClient = 0;
 			int _port = 8888;
 			ServerSocket serverSocket = new ServerSocket(_port);
-			System.out.print("\nServer is listening at port "+_port);
+			System.out.println("\nServer is listening at port "+_port);
 			while (true) {
 				Socket socket = serverSocket.accept();
 				InetAddress clientIp = socket.getInetAddress();
@@ -63,7 +63,7 @@ class RequestHandler extends Thread {
 				String fileName;
 				File file;
 
-				System.out.println("\nAll client:"+countClient);
+				System.out.println("All client:"+countClient);
 			//	dis =  new DataInputStream(socket.getInputStream());
 			//	dos = new DataOutputStream( socket.getOutputStream());
 				if(countClient == 3) {
@@ -83,7 +83,7 @@ class RequestHandler extends Thread {
 
 					client3.dos.writeInt(flag2);
 					client3.dos.flush();
-					System.out.println("Sent flag to all client!");
+					System.out.println("\nSent flag to all client!");
 					// Can send many file
 					while(true) {
 						// enter file until file is exists
@@ -102,6 +102,15 @@ class RequestHandler extends Thread {
 
 						if(fileName.equals("@exit"))
 						{
+							// sent @exit to client know and close connect
+							client1.dos.writeUTF(fileName);
+							client1.dos.flush();
+
+							client2.dos.writeUTF(fileName);
+							client2.dos.flush();
+
+							client3.dos.writeUTF(fileName);
+							client3.dos.flush();
 							break;
 						} else {
 							// send file's name to all client
@@ -113,8 +122,8 @@ class RequestHandler extends Thread {
 
 							client3.dos.writeUTF(fileName);
 							client3.dos.flush();
-							System.out.println("\nsent file's name to all client.");
-							System.out.println("\nStart sending file directly!");
+							System.out.println("Sent file's name to all client.");
+							System.out.println("\nStart sending file directly...");
 							//send file size
 							long fileSize = file.length();
 							client1.dos.writeLong(fileSize);
@@ -132,24 +141,23 @@ class RequestHandler extends Thread {
 							int comfirm1 = 0;
 							int comfirm2 = 0;
 							int comfirm3 = 0;
-						//	System.out.println("\nPrinln test flag comfirm the secound:" + comfirm1);
 
 							comfirm1 = client1.dis.readInt();
-							System.out.println("\nflag confirm: "+comfirm1);
-							System.out.println("\nSent file successfully!");	
+						//	System.out.println("\nFlag confirm: "+comfirm1);
+						//	System.out.println("\nSent file successfully!");	
 							// after comfirm, send ip address of client to other client.
 							if(comfirm1==1) {
+								System.out.println("Send file for 1 client successfully");
 								increaseCountComfirm();
+								//send ip address for other client
 								String addClient = server.vectorAddr.get(0);
 								addClient = addClient.toString().substring(1);
-								System.out.println("\naddress sent to client: "+addClient);
+								System.out.println("\nAddress sent to client: "+addClient);
 								client2.dos.writeUTF(addClient);
 								client2.dos.flush();
-								System.out.println("\nSent ip successfull.");
-
 								client3.dos.writeUTF(addClient);
 								client3.dos.flush();
-								System.out.println("\nSent ip successfull.");
+								System.out.println("\nSent IP address successfull.");
 								// receive flag comfirm of 2 client.
 								comfirm2 = client2.dis.readInt();
 								comfirm3 = client3.dis.readInt();
@@ -157,7 +165,8 @@ class RequestHandler extends Thread {
 								if(comfirm2 != 0 && comfirm3 != 0) {
 									increaseCountComfirm();
 									increaseCountComfirm();
-									System.out.println("\nTatol client comfirm:" +countComfirm );
+									System.out.println("\nTatol client comfirm: " +countComfirm );
+									System.out.println("Send file,Done!");
 								}
 							}
 						}
@@ -168,8 +177,15 @@ class RequestHandler extends Thread {
 							}
 						}
 					}
-					dis.close();
-					dos.close();
+					server.vectorThread.clear();
+                    server.vectorAddr.clear();
+                    System.out.println("Finish send file!\nWaiting connect...");
+                    client1.dis.close();
+					client1.dos.close();
+					client2.dis.close();
+					client2.dos.close();
+					client3.dis.close();
+					client3.dos.close();
 					socket.close();
 				}
 
