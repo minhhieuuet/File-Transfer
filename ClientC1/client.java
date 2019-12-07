@@ -72,7 +72,7 @@ public class client {
 	      			  		}
 	      			  	}
 	        		serverSocket.close();
-	        // client receive from other client
+	   			     // client receive from other client
 					} else {
 						System.out.println("\nWe will receive from other client.");
 						// receive ip address
@@ -96,7 +96,12 @@ public class client {
 							fiOutput.write(buffReceive, 0, counterReceive);
 							sizeReceive += counterReceive;
 						}
-						System.out.println("Received file successfully!");
+						System.out.println("\nReceived file successfully!");
+						// send flag comfirm
+						dos.writeInt(flag);
+						dos.flush();
+						System.out.println("\nSent flag comfirm.");
+						//
 						fiOutput.close();
 						inThr.close();
 						outThr.close();

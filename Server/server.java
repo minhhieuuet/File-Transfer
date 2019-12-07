@@ -46,6 +46,7 @@ class RequestHandler extends Thread {
 	private OutputStream os;
 	private DataOutputStream dos;
 	private int buffer = 1024;
+	private static int countComfirm = 0;
 
 
 	public RequestHandler(Socket _socket, int _countClient, DataInputStream _dis, DataOutputStream _dos){
@@ -128,11 +129,17 @@ class RequestHandler extends Thread {
 							client1.dos.flush();
 							fileInput.close();
 							// receive comfirm from client 1
-							int comfirm = client1.dis.readInt();
-							System.out.println("\nflag confirm: "+comfirm);
+							int comfirm1 = 0;
+							int comfirm2 = 0;
+							int comfirm3 = 0;
+						//	System.out.println("\nPrinln test flag comfirm the secound:" + comfirm1);
+
+							comfirm1 = client1.dis.readInt();
+							System.out.println("\nflag confirm: "+comfirm1);
 							System.out.println("\nSent file successfully!");	
 							// after comfirm, send ip address of client to other client.
-							if(comfirm==1) {
+							if(comfirm1==1) {
+								increaseCountComfirm();
 								String addClient = server.vectorAddr.get(0);
 								addClient = addClient.toString().substring(1);
 								System.out.println("\naddress sent to client: "+addClient);
@@ -143,6 +150,21 @@ class RequestHandler extends Thread {
 								client3.dos.writeUTF(addClient);
 								client3.dos.flush();
 								System.out.println("\nSent ip successfull.");
+								// receive flag comfirm of 2 client.
+								comfirm2 = client2.dis.readInt();
+								comfirm3 = client3.dis.readInt();
+
+								if(comfirm2 != 0 && comfirm3 != 0) {
+									increaseCountComfirm();
+									increaseCountComfirm();
+									System.out.println("\nTatol client comfirm:" +countComfirm );
+								}
+							}
+						}
+						while(true) {
+							if (countComfirm == 3) {
+								countComfirm = 0;
+								break;
 							}
 						}
 					}
@@ -156,4 +178,7 @@ class RequestHandler extends Thread {
 			}
 		//}	
 	}
+	private synchronized void increaseCountComfirm() {
+        countComfirm++;
+    }
 }
