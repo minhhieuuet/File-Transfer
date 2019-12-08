@@ -49,6 +49,7 @@ class RequestHandler extends Thread {
 	private static int countComfirm = 0;
 	public static long start;
 	public static long end;
+	public static long totalTime = 0;
 
 	public RequestHandler(Socket _socket, int _countClient, DataInputStream _dis, DataOutputStream _dos){
 		this.socket = _socket;
@@ -173,6 +174,8 @@ class RequestHandler extends Thread {
 									System.out.println("Send file,Done!");
 									System.out.println("End time: " + end);
 									System.out.println("Execution time is " + (end - start) +" miliseconds");
+									totalTime = totalTime + (end-start);
+									System.out.println("Total execution time is " + totalTime +" miliseconds");
 								}
 							}
 						}
