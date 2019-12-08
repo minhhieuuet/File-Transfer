@@ -17,7 +17,7 @@ public class server {
 				InetAddress clientIp = socket.getInetAddress();
 				int clientPort = socket.getPort();
 				DataInputStream dis = new DataInputStream(socket.getInputStream());
-				DataOutputStream dos = new DataOutputStream(socket.getOutputStream()); 
+				DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
 				countClient++;
 				RequestHandler requestHandler = new RequestHandler(socket, countClient, dis, dos);
 				System.out.println("\nClient address: " + clientIp.toString().substring(1) + ":" + clientPort + " is connecting");
@@ -47,7 +47,8 @@ class RequestHandler extends Thread {
 	private DataOutputStream dos;
 	private int buffer = 1024;
 	private static int countComfirm = 0;
-
+	public static long start;
+	public static long end;
 
 	public RequestHandler(Socket _socket, int _countClient, DataInputStream _dis, DataOutputStream _dos){
 		this.socket = _socket;
@@ -90,6 +91,8 @@ class RequestHandler extends Thread {
 						while(true) {
 							System.out.print("\nEnter file's name to send to client: ");
 							fileName = input.nextLine();
+							start = System.currentTimeMillis();
+							System.out.println("Start time: " + start);
 							file = new File(fileName);
 
 							if(file.exists() || fileName.equals("@exit")){
@@ -144,7 +147,7 @@ class RequestHandler extends Thread {
 
 							comfirm1 = client1.dis.readInt();
 						//	System.out.println("\nFlag confirm: "+comfirm1);
-						//	System.out.println("\nSent file successfully!");	
+						//	System.out.println("\nSent file successfully!");
 							// after comfirm, send ip address of client to other client.
 							if(comfirm1==1) {
 								System.out.println("Send file for 1 client successfully");
@@ -166,7 +169,10 @@ class RequestHandler extends Thread {
 									increaseCountComfirm();
 									increaseCountComfirm();
 									System.out.println("\nTatol client comfirm: " +countComfirm );
+									end = System.currentTimeMillis();
 									System.out.println("Send file,Done!");
+									System.out.println("End time: " + end);
+									System.out.println("Execution time is " + (end - start) +" miliseconds");
 								}
 							}
 						}
@@ -192,7 +198,7 @@ class RequestHandler extends Thread {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		//}	
+		//}
 	}
 	private synchronized void increaseCountComfirm() {
         countComfirm++;
