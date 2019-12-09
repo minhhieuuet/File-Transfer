@@ -169,7 +169,7 @@ class RequestHandler extends Thread {
 								if(comfirm2 != 0 && comfirm3 != 0) {
 									increaseCountComfirm();
 									increaseCountComfirm();
-									System.out.println("\nTatol client comfirm: " +countComfirm );
+									System.out.println("\nTotal client comfirm: " +countComfirm );
 									end = System.currentTimeMillis();
 									System.out.println("Send file,Done!");
 									System.out.println("End time: " + end);
